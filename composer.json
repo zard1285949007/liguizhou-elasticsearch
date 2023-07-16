@@ -1,5 +1,5 @@
 {
-    "name": "jingyou/elasticsearch",
+    "name": "liguizhou/elasticsearch",
     "description": "表查询类的elasticsearch扩展",
     "type": "library",
     "autoload": {
