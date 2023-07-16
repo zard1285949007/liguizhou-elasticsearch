@@ -1,0 +1,21 @@
+{
+    "name": "jingyou/elasticsearch",
+    "description": "表查询类的elasticsearch扩展",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Jingyou\\Elasticsearch\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "liguizhou"
+        }
+    ],
+    "require": {
+        "php": ">=7.2",
+        "hyperf/framework": "*",
+        "hyperf/utils": "*",
+        "elasticsearch/elasticsearch": "^7.0"
+    }
+}
