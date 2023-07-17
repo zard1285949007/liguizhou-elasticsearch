@@ -52,6 +52,7 @@ class Client
         }
 
         return $builder->setHosts($config['hosts'])
+            ->setBasicAuthentication($config['username'], $config['password'])
             ->build();
     }
 }

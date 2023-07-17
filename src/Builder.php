@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Liguizhou\Elasticsearch;
 
 use Hyperf\Utils\Collection;
+use Hyperf\Logger\LoggerFactory;
+use Hyperf\Utils\ApplicationContext;
 
 /**
  * Class Builder
@@ -53,6 +55,18 @@ class Builder
      * @var int
      */
     protected int $size = 0;
+
+    /**
+     * 总条数
+     * @var int
+     */
+    protected int $count = 0;
+
+    /**
+     * 是否为统计条数
+     * @var int
+     */
+    protected int $isCount = 0;
 
     /**
      * 是否聚合查询，聚合查询和普通查询的处理逻辑不一样
@@ -193,10 +207,16 @@ class Builder
         if (!empty($query)) {
             $this->sql['body']['query'] = $query;
         }
-        if ($this->isAgg != 0) {
-            $this->aggSqlCombile();
-        } else {
+
+        if ($this->isAgg == 0) {
             $this->normalSqlCombine();
+        } else {
+            if ($this->isCount == 0) {
+                $this->aggSqlCombile();
+            } else {
+                $this->countSqlCombile();
+            }
+
         }
     }
 
@@ -231,6 +251,9 @@ class Builder
         if ($this->size != 0) { //等于0查所有数据
             $this->sql['body']['size'] = $this->size;
             $this->sql['body']['from'] = (($this->page - 1) * $this->size) ?: 0;
+        }
+        if ($this->isCount == 1) { //计算条数一定不查询详细数据
+            $this->sql['body']['size'] = 0;
         }
     }
 
@@ -297,6 +320,29 @@ class Builder
         }
 
         $this->sql['body']['size'] = 0; //聚合不需要详细数据
+
+    }
+
+    /**
+     * 查询条数拼接
+     * @return void
+     */
+    private function countSqlCombile()
+    {
+//
+//        'my_count' => [
+//        'cardinality' => [
+//            'script' => [
+//                'lang' => 'painless',
+//                'source' => "doc['pid'].value + '_' + doc['put_date'].value"
+//            ]
+//        ]
+//    ]
+        $group = $this->parseGroup();
+
+        $this->sql['body']['aggs']['self_count']['cardinality'] = $group;
+
+        $this->sql['body']['size'] = 0; //不需要详细数据
 
     }
 
@@ -387,10 +433,9 @@ class Builder
     /**
      * 连接elasticsearch查询方法
      * @param $method
-     * @param ...$parameters
      * @return mixed|null
      */
-    private function run($method, ...$parameters)
+    private function run($method)
     {
         $client = $this->client;
         $sql = $this->sql;
@@ -402,8 +447,25 @@ class Builder
         if (env('APP_ENV', '') == 'dev' || env('APP_ENV', '') == 'local') {
             dump($sql);
         }
-//        Log::get()->info("日志ES-elasticsearch dsl", ['method' => $method, 'sql' => $sql]);
-        return call([$client, $method], $parameters);
+
+        ApplicationContext::getContainer()
+            ->get(LoggerFactory::class)
+            ->get('elasticsearch', 'default')
+            ->info('Elasticsearch run', compact('method', 'sql'));
+        try {
+            $result = call([$client, $method], [$sql]);
+        } catch (\Exception $e) {
+            if (env('APP_ENV', '') == 'dev' || env('APP_ENV', '') == 'local') {
+                dump($result);
+            }
+            ApplicationContext::getContainer()
+                ->get(LoggerFactory::class)
+                ->get('elasticsearch', 'default')
+                ->info('Elasticsearch run', ['msg' => $e->getMessage(), 'result' => $result]);
+            throw new \Exception($e->getMessage());
+        }
+
+        return $result;
     }
 
     /**
@@ -426,15 +488,17 @@ class Builder
      * @param int $size
      * @return Paginator
      */
-    public function page(int $page = 1, int $size = 100): Paginator
+    public function page(int $page = 1, int $size = 100)
     {
         $this->page = $page;
         $this->size = $size;
         $this->sqlCombine();
-        $result = $this->run('search', $this->sql);
+        $result = $this->run('search');
         $collection = $this->formatData($result);
+        //查询总条数
+        $this->count();
 
-        return make(Paginator::class, ['items' => $collection, 'perPage' => $size, 'currentPage' => $page])->toArray();
+        return make(Paginator::class, ['items' => $collection, 'perPage' => $size, 'currentPage' => $page, 'total' => $this->count])->toArray();
     }
 
     /**
@@ -444,9 +508,23 @@ class Builder
     public function get(): Collection
     {
         $this->sqlCombine();
-        $result = $this->run('search', $this->sql);
+        $result = $this->run('search');
         $collection = $this->formatData($result);
         return $collection;
+    }
+
+    public function count()
+    {
+        $this->isCount = 1;
+        $this->order = []; //算总数没有排序
+        $this->fields = []; //算总数没有字段
+        $this->sqlCombine();
+        $result = $this->run('search');
+        if ($this->isAgg == 0) {
+            $this->count = (int)$result['hits']['total']['value'] ?? 0;
+        } else {
+            $this->count = (int)$result['aggregations']['self_count']['value'] ?? 0;
+        }
     }
 
     private function formatData(array $data): Collection

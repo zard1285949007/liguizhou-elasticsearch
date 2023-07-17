@@ -22,6 +22,8 @@ class Paginator implements Arrayable, JsonSerializable, Jsonable
 
     protected $currentPage;
 
+    protected $total;
+
     protected $items;
 
     /**
@@ -29,11 +31,12 @@ class Paginator implements Arrayable, JsonSerializable, Jsonable
      *
      * @param mixed $items
      */
-    public function __construct($items, int $perPage, int $currentPage)
+    public function __construct($items, int $perPage, int $currentPage, int $total)
     {
         $this->items = $items;
         $this->perPage = $perPage;
         $this->currentPage = $currentPage;
+        $this->total = $total;
 
         $this->setItems($items);
     }
@@ -57,9 +60,10 @@ class Paginator implements Arrayable, JsonSerializable, Jsonable
     public function toArray(): array
     {
         return [
-            'page' => $this->currentPage,
-            'size' => $this->perPage,
-            'data' => $this->items->toArray(),
+            'page'  => $this->currentPage,
+            'size'  => $this->perPage,
+            'total' => $this->total,
+            'data'  => $this->items->toArray(),
 //            'has_more'     => $this->hasMorePages()
         ];
     }
