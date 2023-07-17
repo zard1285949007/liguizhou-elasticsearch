@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Liguizhou\Elasticsearch;
 
-use App\Util\Base\Log;
 use Hyperf\Utils\Collection;
 
 /**
@@ -400,7 +399,9 @@ class Builder
             $method = $methods[1];
             $client = $client->{$methods[0]}();
         }
-        dump($sql);
+        if (env('APP_ENV', '') == 'dev' || env('APP_ENV', '') == 'local') {
+            dump($sql);
+        }
 //        Log::get()->info("日志ES-elasticsearch dsl", ['method' => $method, 'sql' => $sql]);
         return call([$client, $method], $parameters);
     }
@@ -433,8 +434,7 @@ class Builder
         $result = $this->run('search', $this->sql);
         $collection = $this->formatData($result);
 
-
-        return make(Paginator::class, ['items' => $collection, 'perPage' => $size, 'currentPage' => $page]);
+        return make(Paginator::class, ['items' => $collection, 'perPage' => $size, 'currentPage' => $page])->toArray();
     }
 
     /**
@@ -445,8 +445,6 @@ class Builder
     {
         $this->sqlCombine();
         $result = $this->run('search', $this->sql);
-//        dump($result);
-//        exit;
         $collection = $this->formatData($result);
         return $collection;
     }
