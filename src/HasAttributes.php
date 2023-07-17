@@ -5,7 +5,7 @@ declare(strict_types=1);
  * 属性
  */
 
-namespace Jingyou\Elasticsearch;
+namespace Liguizhou\Elasticsearch;
 
 trait HasAttributes
 {

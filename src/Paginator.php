@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jingyou\Elasticsearch;
+namespace Liguizhou\Elasticsearch;
 
 use Hyperf\Utils\Collection;
 use Hyperf\Utils\Contracts\Arrayable;
