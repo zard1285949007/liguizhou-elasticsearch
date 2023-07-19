@@ -17,5 +17,11 @@
         "hyperf/framework": "*",
         "hyperf/utils": "*",
         "elasticsearch/elasticsearch": "^7.0"
-    }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://mirrors.aliyun.com/composer/"
+        }
+    ]
 }
