@@ -94,7 +94,7 @@ trait ExcuteBuilder
         return $result;
     }
 
-    public function createIndex(array $values)
+    public function createIndex(array $values, array $settings = [])
     {
         $properties = [];
         foreach ($values as $key => $value) {
@@ -115,6 +115,9 @@ trait ExcuteBuilder
                 ]
             ]
         ];
+        if (!empty($settings)) {
+            $body['body']['settings'] = $settings;
+        }
 
         $this->sql = $body;
         $result = $this->run('indices.create');
@@ -153,6 +156,20 @@ trait ExcuteBuilder
         ];
         $this->sql = $body;
         $result = $this->run('delete');
+        return $result;
+    }
+
+    public function updateSetting(array $value)
+    {
+        $body = [
+            'index' => $this->model->getIndex(),
+            'body' => [
+                'settings' => $value
+            ]
+        ];
+
+        $this->sql = $body;
+        $result = $this->run('indices.putSettings');
         return $result;
     }
 

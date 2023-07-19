@@ -27,11 +27,18 @@ abstract class Model implements Arrayable, Jsonable, JsonSerializable
      */
     protected $connection = 'default';
 
+    protected int $debug = 0;
+
     use HasAttributes;
 
     public function __construct()
     {
         $this->client = ApplicationContext::getContainer()->get(Client::class);
+    }
+
+    public function getDebug()
+    {
+        return $this->debug;
     }
 
     /**

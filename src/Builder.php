@@ -357,8 +357,9 @@ class Builder
         $group = [];
         $groupString = '';
         foreach ($this->group as $vGroup) {
-            $groupString .= "doc['{$vGroup}'].value + '_'";
+            $groupString .= "doc['{$vGroup}'].value + '_' +";
         }
+        $groupString = trim($groupString, '+');
 
         if (!empty($groupString)) {
             $group = [
@@ -446,7 +447,7 @@ class Builder
             $method = $methods[1];
             $client = $client->{$methods[0]}();
         }
-        if (env('APP_ENV', '') == 'dev' || env('APP_ENV', '') == 'local') {
+        if ($this->model->getDebug()) {
             dump($sql);
         }
 
@@ -457,9 +458,9 @@ class Builder
         try {
             $result = call([$client, $method], [$sql]);
         } catch (\Exception $e) {
-            if (env('APP_ENV', '') == 'dev' || env('APP_ENV', '') == 'local') {
-                dump($result);
-            }
+//            if ($this->model->getDebug()) {
+            dump($e->getMessage());
+//            }
             ApplicationContext::getContainer()
                 ->get(LoggerFactory::class)
                 ->get('elasticsearch', 'default')
@@ -527,6 +528,7 @@ class Builder
         } else {
             $this->count = (int)$result['aggregations']['self_count']['value'] ?? 0;
         }
+        return $this->count;
     }
 
     public function find($id)
