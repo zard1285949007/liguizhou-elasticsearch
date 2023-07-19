@@ -31,7 +31,7 @@ trait ExcuteBuilder
             'body'  => $data
         ];
         if (!empty($value['id'])) {
-            $body['_id'] = $value['id'];
+            $body['id'] = $value['id'];
         }
         $this->sql = $body;
         $result = $this->run('index');
@@ -50,7 +50,7 @@ trait ExcuteBuilder
         $body = [];
         foreach ($values as $value) {
             $tmp = [
-                'index' => ['_index' => $this->model->getIndex(), '_type' => '_doc'],
+                'index' => ['_index' => $this->model->getIndex()],
             ];
             if (!empty($value['id'])) {
                 $tmp['_id'] = $value['id'];
