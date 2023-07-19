@@ -53,7 +53,7 @@ trait ExcuteBuilder
                 'index' => ['_index' => $this->model->getIndex()],
             ];
             if (!empty($value['id'])) {
-                $tmp['_id'] = $value['id'];
+                $tmp['index']['_id'] = $value['id'];
             }
             $body['body'][] = $tmp;
             $data = empty($fields) ? $value : Arr::only($value, $fields);
