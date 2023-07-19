@@ -541,6 +541,10 @@ class Builder
         $this->order = []; //算总数没有排序
         $this->fields = []; //算总数没有字段
         $this->sqlCombine();
+        if ($this->isAgg == 0) {
+            $this->sql['body']['track_total_hits'] = true; //文档数量大于10000时，需要加上
+        }
+
         $result = $this->run('search');
         if ($this->isAgg == 0) {
             $this->count = (int)$result['hits']['total']['value'] ?? 0;

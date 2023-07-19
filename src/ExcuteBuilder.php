@@ -164,7 +164,9 @@ trait ExcuteBuilder
         $body = [
             'index' => $this->model->getIndex(),
             'body' => [
-                'settings' => $value
+                'settings' => [
+                    'index' => $value
+                ]
             ]
         ];
 
@@ -173,4 +175,13 @@ trait ExcuteBuilder
         return $result;
     }
 
+    public function getSetting()
+    {
+        $body = [
+            'index' => $this->model->getIndex()
+        ];
+        $this->sql = $body;
+        $result = $this->run('indices.getSettings');
+        return $result;
+    }
 }
