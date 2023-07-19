@@ -17,6 +17,8 @@ use Hyperf\Utils\ApplicationContext;
  */
 class Builder
 {
+    use ExcuteBuilder;
+
     //查询条件符
     const OPERATE = ['=', '>', '<', '>=', '<=', '!=', '<>', 'in', 'not in', 'like', 'between', 'exists'];
 
@@ -527,6 +529,22 @@ class Builder
         }
     }
 
+    public function find($id)
+    {
+        $this->sql = [
+            'index' => $this->model->getIndex(),
+            'id'    => $id
+        ];
+        $result = $this->run('get');
+        $data = $result['_source'] ?? [];
+        $data['id'] = $result['_id'] ?? '';
+
+        $model = $this->model->newInstance();
+        $model->setAttributes($data);
+        $model->setOriginal($result);
+        return $model;
+    }
+
     private function formatData(array $data): Collection
     {
         if ($this->isAgg == 0) { //非聚合
@@ -575,5 +593,17 @@ class Builder
         }
 
         return $collection;
+    }
+
+    public function getIndex()
+    {
+        $body = [
+            'index' => $this->model->getIndex()
+        ];
+
+        $this->sql = $body;
+        $result    = $this->run('indices.getMapping');
+
+        return $result;
     }
 }
