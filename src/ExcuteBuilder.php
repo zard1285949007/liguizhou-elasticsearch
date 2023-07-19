@@ -101,8 +101,8 @@ trait ExcuteBuilder
             $properties[$key] = ['type' => $value];
         }
         $body = [
-            'index'    => $this->model->getIndex(),
-            'body' => [
+            'index' => $this->model->getIndex(),
+            'body'  => [
                 'settings' => [
                     'number_of_shards'   => 1,
                     'number_of_replicas' => 1
@@ -130,8 +130,8 @@ trait ExcuteBuilder
         }
 
         $body = [
-            'index'    => $this->model->getIndex(),
-            'body' => [
+            'index' => $this->model->getIndex(),
+            'body'  => [
                 '_source'    => [
                     'enabled' => true
                 ],
@@ -142,6 +142,17 @@ trait ExcuteBuilder
         $this->sql = $body;
         $result = $this->run('indices.putMapping');
 
+        return $result;
+    }
+
+    public function delete($id)
+    {
+        $body = [
+            'index' => $this->model->getIndex(),
+            'id'    => $id
+        ];
+        $this->sql = $body;
+        $result = $this->run('delete');
         return $result;
     }
 
