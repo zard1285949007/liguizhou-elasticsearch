@@ -73,6 +73,11 @@ trait HasAttributes
     public function setAttributes(array $attributes): void
     {
         $this->attributes = $attributes;
+        foreach ($attributes as $k => $v) {
+            if (!in_array($k, ['attributes', 'original'] )) {
+                $this->{$k} = $v;
+            }
+        }
     }
 
     /**

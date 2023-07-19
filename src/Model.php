@@ -131,4 +131,10 @@ abstract class Model implements Arrayable, Jsonable, JsonSerializable
     {
         return (new static())->{$method}(...$parameters);
     }
+
+    public function __get($name)
+    {
+        return $this->$name;
+    }
+
 }
