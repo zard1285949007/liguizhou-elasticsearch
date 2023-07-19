@@ -47,16 +47,16 @@ class Builder
     protected array $group = [];
 
     /**
-     * 页数
+     * 从哪条开始查起
      * @var int
      */
-    protected int $page = 1;
+    protected int $offset = 0;
 
     /**
-     * 条数
+     * 查询条数
      * @var int
      */
-    protected int $size = 0;
+    protected int $limit = 0;
 
     /**
      * 总条数
@@ -199,6 +199,11 @@ class Builder
         return $this;
     }
 
+    public function addSelect(...$params):Builder
+    {
+        return $this->select(...$params);
+    }
+
     private function sqlCombine()
     {
         $this->sql = [
@@ -250,9 +255,9 @@ class Builder
         }
 
         //拼接分页
-        if ($this->size != 0) { //等于0查所有数据
-            $this->sql['body']['size'] = $this->size;
-            $this->sql['body']['from'] = (($this->page - 1) * $this->size) ?: 0;
+        if ($this->limit != 0) { //等于0查所有数据
+            $this->sql['body']['size'] = $this->limit;
+            $this->sql['body']['from'] = $this->offset;
         }
         if ($this->isCount == 1) { //计算条数一定不查询详细数据
             $this->sql['body']['size'] = 0;
@@ -309,9 +314,9 @@ class Builder
 
         //拼接分页
         if (!empty($group)) { //没有分组不需要分页
-            if ($this->size != 0) {
-                $aggQuery['aggs']['self_sort']['bucket_sort']['size'] = $this->size;
-                $aggQuery['aggs']['self_sort']['bucket_sort']['from'] = (($this->page - 1) * $this->size) ?: 0;
+            if ($this->limit != 0) {
+                $aggQuery['aggs']['self_sort']['bucket_sort']['size'] = $this->limit;
+                $aggQuery['aggs']['self_sort']['bucket_sort']['from'] = $this->offset;
             }
         }
 
@@ -484,6 +489,15 @@ class Builder
         return $this;
     }
 
+    public function offset(int $offset)
+    {
+        $this->offset = $offset;
+    }
+
+    public function limit(int $limit)
+    {
+        $this->limit = $limit;
+    }
 
     /**
      * 分页
@@ -493,8 +507,8 @@ class Builder
      */
     public function page(int $page = 1, int $size = 100)
     {
-        $this->page = $page;
-        $this->size = $size;
+        $this->limit = $size;
+        $this->offset = (($page - 1) * $size) ?: 0;
         $this->sqlCombine();
         $result = $this->run('search');
         $collection = $this->formatData($result);
