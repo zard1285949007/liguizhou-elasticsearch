@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Liguizhou\Elasticsearch;
 
+use Hyperf\Contract\LengthAwarePaginatorInterface;
 use Hyperf\Utils\Collection;
 use Hyperf\Logger\LoggerFactory;
 use Hyperf\Utils\ApplicationContext;
@@ -463,9 +464,9 @@ class Builder
         try {
             $result = call([$client, $method], [$sql]);
         } catch (\Exception $e) {
-//            if ($this->model->getDebug()) {
-            dump($e->getMessage());
-//            }
+            if ($this->model->getDebug()) {
+                dump($e->getMessage());
+            }
             ApplicationContext::getContainer()
                 ->get(LoggerFactory::class)
                 ->get('elasticsearch', 'default')
@@ -501,21 +502,25 @@ class Builder
 
     /**
      * 分页
-     * @param int $page
-     * @param int $size
-     * @return Paginator
+     * @param int $currentPage
+     * @param int $perPage
+     * @return LengthAwarePaginatorInterface
      */
-    public function page(int $page = 1, int $size = 100)
+    public function paginate(int $currentPage = 1, int $perPage = 100): LengthAwarePaginatorInterface
     {
-        $this->limit = $size;
-        $this->offset = (($page - 1) * $size) ?: 0;
+        //offset()和limit()方法的优先及更高
+        $this->limit =  empty($this->limit) ? $perPage : $this->limit;
+        $this->offset = empty($this->offset) ? (($currentPage - 1) * $this->limit) : $this->offset;
+
         $this->sqlCombine();
         $result = $this->run('search');
-        $collection = $this->formatData($result);
+        $items = $this->formatData($result);
         //查询总条数
-        $this->count();
+        $total = $this->count();
+        $options = $this->sql;
 
-        return make(Paginator::class, ['items' => $collection, 'perPage' => $size, 'currentPage' => $page, 'total' => $this->count])->toArray();
+        $container = ApplicationContext::getContainer();
+        return $container->make(LengthAwarePaginatorInterface::class, compact('items', 'total', 'perPage', 'currentPage', 'options'));
     }
 
     /**

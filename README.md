@@ -35,5 +35,5 @@ class OrderModel extends Model
 <?php
    OrderModel::query()->where('pid', '1')->get()->toArray();      
    OrderModel::query()->where('pid', 'in', [1,2,3])->groupBy(['pid'])->orderBy(['pid'])->get()->toArray();   
-   OrderModel::query()->whereIn('pid', [1,2,3])->page(1,10); 
+   OrderModel::query()->whereIn('pid', [1,2,3])->offset(0)->limit(10)->paginate(); 
 ```
