@@ -513,7 +513,6 @@ class Builder
         $this->offset = empty($this->offset) ? (($currentPage - 1) * $this->limit) : $this->offset;
 
         $this->sqlCombine();
-
         $result = $this->run('search');
         $items = $this->formatData($result);
         //查询总条数
