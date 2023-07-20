@@ -490,14 +490,16 @@ class Builder
         return $this;
     }
 
-    public function offset(int $offset)
+    public function offset(int $offset): Builder
     {
         $this->offset = $offset;
+        return $this;
     }
 
-    public function limit(int $limit)
+    public function limit(int $limit): Builder
     {
         $this->limit = $limit;
+        return $this;
     }
 
     /**
@@ -506,18 +508,19 @@ class Builder
      * @param int $perPage
      * @return LengthAwarePaginatorInterface
      */
-    public function paginate(int $currentPage = 1, int $perPage = 100): LengthAwarePaginatorInterface
+    public function paginate(): LengthAwarePaginatorInterface
     {
-        //offset()和limit()方法的优先及更高
-        $this->limit =  empty($this->limit) ? $perPage : $this->limit;
-        $this->offset = empty($this->offset) ? (($currentPage - 1) * $this->limit) : $this->offset;
+        $currentPage = intval(floor($this->offset/$this->limit) + 1);
+        $perPage = $this->limit;
 
         $this->sqlCombine();
         $result = $this->run('search');
+
         $items = $this->formatData($result);
+        $options = $this->sql;
+
         //查询总条数
         $total = $this->count();
-        $options = $this->sql;
 
         $container = ApplicationContext::getContainer();
         return $container->make(LengthAwarePaginatorInterface::class, compact('items', 'total', 'perPage', 'currentPage', 'options'));
@@ -535,13 +538,14 @@ class Builder
         return $collection;
     }
 
-    public function first(): Collection
+    public function first(): ?Model
     {
         $this->limit(1);
         $this->sqlCombine();
         $result = $this->run('search');
         $collection = $this->formatData($result);
-        return $collection;
+
+        return $collection[0] ?? null;
     }
 
     public function count()
@@ -605,7 +609,7 @@ class Builder
                 $model->setAttributes($attributes);
                 $model->setOriginal($data);
 
-                $collection = Collection::make($model);
+                $collection = Collection::make([$model]);
             } else { //没有分组
                 $list = $data['aggregations']['self_group']['buckets'] ?? [];
                 $collection = Collection::make($list)->map(function ($value) {
