@@ -98,7 +98,11 @@ trait ExcuteBuilder
     {
         $properties = [];
         foreach ($values as $key => $value) {
-            $properties[$key] = ['type' => $value];
+            if (is_array($value)) {
+                $properties[$key] = $value;
+            } else {
+                $properties[$key] = ['type' => $value];
+            }
         }
         $body = [
             'index' => $this->model->getIndex(),
@@ -129,7 +133,11 @@ trait ExcuteBuilder
     {
         $properties = [];
         foreach ($values as $key => $value) {
-            $properties[$key] = ['type' => $value];
+            if (is_array($value)) {
+                $properties[$key] = $value;
+            } else {
+                $properties[$key] = ['type' => $value];
+            }
         }
 
         $body = [
