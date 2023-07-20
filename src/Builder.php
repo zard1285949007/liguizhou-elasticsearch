@@ -171,7 +171,7 @@ class Builder
      */
     public function groupBy($column): Builder
     {
-        $column = (array)$column;
+        $column = is_array($column) ? $column : func_get_args();
         $this->group = array_merge($this->order, $column);
         $this->isAgg = 1;
 
@@ -186,9 +186,9 @@ class Builder
         return $this;
     }
 
-    public function select(...$params): Builder
+    public function select($params): Builder
     {
-        $fields = func_get_args();
+        $fields = is_array($params) ? $params : func_get_args();
         foreach ($fields as $field) {
             $fieldClass = new Field($field);
             $this->fields[$fieldClass->aliasField] = $fieldClass;
@@ -513,6 +513,7 @@ class Builder
         $this->offset = empty($this->offset) ? (($currentPage - 1) * $this->limit) : $this->offset;
 
         $this->sqlCombine();
+
         $result = $this->run('search');
         $items = $this->formatData($result);
         //查询总条数
@@ -529,6 +530,15 @@ class Builder
      */
     public function get(): Collection
     {
+        $this->sqlCombine();
+        $result = $this->run('search');
+        $collection = $this->formatData($result);
+        return $collection;
+    }
+
+    public function first(): Collection
+    {
+        $this->limit(1);
         $this->sqlCombine();
         $result = $this->run('search');
         $collection = $this->formatData($result);
