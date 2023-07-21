@@ -6,6 +6,11 @@
 composer require liguizhou/elasticsearch
 ```
 
+```
+需要注意：使用es时，需要设置max_result_window，search.max_buckets
+测试的es设置为1百万
+```
+
 ### Model
 
 * index 相当于mysql中的表
