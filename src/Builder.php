@@ -21,7 +21,7 @@ class Builder
     use ExcuteBuilder;
 
     //查询条件符
-    const OPERATE = ['=', '>', '<', '>=', '<=', '!=', '<>', 'in', 'not in', 'like', 'between', 'exists'];
+    const OPERATE = ['=', '>', '<', '>=', '<=', '!=', '<>', 'in', 'not in', 'like', 'between', 'exists', 'not exists'];
 
     /**
      * 查询字段
@@ -372,9 +372,11 @@ class Builder
                     "lang"   => "painless",
                     'source' => $groupString
                 ],
-                'size'       => 1000000, //排序分页会根据父聚合的个数进行的，所以这里暂时设置为一百万
-                'shard_size' => 1000000,
             ];
+            if ($this->isCount == 0) {
+                $group['size'] = 1000000; //排序分页会根据父聚合的个数进行的，所以这里暂时设置为一百万
+                $group['shard_size'] = 1000000;
+            }
         }
 
         return $group;
@@ -424,8 +426,18 @@ class Builder
                     $filterMust[] = ['range' => [$column => ['gte' => $value[0], 'lte' => $value[1]]]];
                     break;
                 case 'exists':
-                    $filterMust[] = ['exists' => [$column => $value]];
+                    $filterMust[] = ['exists' => ['field' => $column]];
+                    break;
+                case 'not exists':
+                    $filterMustNot[] = ['exists' => ['field' => $column]];
+                    break;
+            }
+        }
 
+        //如果文档中值不存在，然后用这个分组查询，会报错的，所以要加上条件排除不存在的值
+        if (!empty($this->group)) {
+            foreach ($this->group as $value) {
+                $filterMust[] = ['exists' => ['field' => $value]];
             }
         }
 

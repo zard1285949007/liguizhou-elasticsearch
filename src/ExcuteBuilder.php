@@ -103,15 +103,18 @@ trait ExcuteBuilder
     }
 
 
-    public function updateByQuery(array $body, array $query)
+    public function updateByQuery(array $body)
     {
+        $query = $this->parseQuery();
+        if (empty($query)) { //先不允许全更新
+            return [];
+        }
         $source = '';
         foreach ($body as $key => $value) {
             $source .= 'ctx._source.' . $key . '=params.' . $key . ';';
         }
         $body = [
             'index' => $this->model->getIndex(),
-
             'body'  => [
                 'query'  => $query,
                 'script' => [
@@ -208,16 +211,22 @@ trait ExcuteBuilder
             'id'    => $id
         ];
         $this->sql = $body;
-        $result = $this->run('delete');
+        $result = $this->run('indices.delete');
         return $result;
     }
 
 
-    public function deleteByQuery($value)
+    public function deleteByQuery()
     {
+        $query = $this->parseQuery();
+        if (empty($query)) { //先不允许全删除
+            return [];
+        }
         $body = [
             'index' => $this->model->getIndex(),
-            'query'    => $value
+            'body' => [
+                'query'    => $query
+            ]
         ];
         $this->sql = $body;
         $result = $this->run('deleteByQuery');
