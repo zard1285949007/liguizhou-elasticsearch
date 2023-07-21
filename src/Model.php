@@ -134,7 +134,17 @@ abstract class Model implements Arrayable, Jsonable, JsonSerializable
 
     public function __get($name)
     {
-        return $this->$name;
+        if (property_exists($this, $name)) {
+            return $this->{$name};
+        } else {
+            return null;
+        }
+    }
+
+    public function __set($name, $value)
+    {
+        $this->{$name} = $value;
+        $this->attributes[$name] = $value;
     }
 
 }

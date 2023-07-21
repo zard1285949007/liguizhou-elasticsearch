@@ -368,7 +368,7 @@ class Builder
 
         if (!empty($groupString)) {
             $group = [
-                'script'     => [
+                'script' => [
                     "lang"   => "painless",
                     'source' => $groupString
                 ],
@@ -472,10 +472,20 @@ class Builder
 
         ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
-            ->get('elasticsearch', 'default')
-            ->info('Elasticsearch run', compact('method', 'sql'));
+            ->get('sql', 'default')
+            ->info('elasticsearch_sql', compact('method', 'sql'));
         try {
             $result = call([$client, $method], [$sql]);
+            $took = $result['took'] ?? 0;
+            if ($this->model->getDebug()) {
+                dump('耗时：' . $took / 1000 . '秒');
+            }
+            if ($took > 3000) { //超过3秒定义为慢查询
+                ApplicationContext::getContainer()
+                    ->get(LoggerFactory::class)
+                    ->get('sql', 'default')
+                    ->info('elasticsearch_slow_sql', compact('method', 'sql'));
+            }
         } catch (\Exception $e) {
             if ($this->model->getDebug()) {
                 dump($e->getMessage());
