@@ -51,6 +51,11 @@ trait HasAttributes
      */
     public function getAttributes(): array
     {
+        //因为会有一些属性在外部被更改
+        foreach ($this->attributes as $key => $value) {
+            $this->attributes[$key] = property_exists($this, $key) ? $this->{$key} : '';
+        }
+
         return $this->attributes;
     }
 
