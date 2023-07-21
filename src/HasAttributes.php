@@ -61,6 +61,7 @@ trait HasAttributes
     {
         $fields = empty($fields) ? array_keys($attributes) : $fields;
 
+        $newAttributes = [];
         //补全数据，因为有些文档没有设置这个字段时，不会查出来这个字段
         foreach ($fields as $vField) {
             //获取数据默认值和数据类型
@@ -72,26 +73,26 @@ trait HasAttributes
             }
             //补全数据和格式化数据
             if (!isset($attributes[$vField])) {
-                $attributes[$vField] = $defaultValue; //给默认值
+                $newAttributes[$vField] = $defaultValue; //给默认值
             } else {
-                if (!empty($type)) {
-                    switch ($type) {
-                        case 'int':
-                        case 'integer':
-                            $attributes[$vField] = intval($attributes[$vField]);
-                            break;
-                        case 'float':
-                            $attributes[$vField] = floatval($attributes[$vField]);
-                            break;
-                    }
+                switch ($type) {
+                    case 'int':
+                    case 'integer':
+                        $newAttributes[$vField] = intval($attributes[$vField]);
+                        break;
+                    case 'float':
+                        $newAttributes[$vField] = floatval($attributes[$vField]);
+                        break;
+                    default:
+                        $newAttributes[$vField] = $attributes[$vField];
                 }
             }
 
             //设置变量
-            $this->{$vField} = $attributes[$vField];
+            $this->{$vField} = $newAttributes[$vField];
         }
 
-        $this->attributes = $attributes;
+        $this->attributes = $newAttributes;
     }
 
     /**
