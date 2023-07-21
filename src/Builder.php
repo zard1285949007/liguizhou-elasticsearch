@@ -321,7 +321,7 @@ class Builder
         }
 
         if (empty($group)) {
-            $this->sql['body'] = $aggQuery;
+            $this->sql['body']['aggs'] = $aggQuery['aggs'];
         } else {
             $this->sql['body']['aggs']['self_group'] = $aggQuery;
         }
@@ -591,7 +591,7 @@ class Builder
         $data['id'] = $result['_id'] ?? '';
 
         $model = $this->model->newInstance();
-        $model->setAttributes($data);
+        $model->setAttributes($data, array_keys($this->fields));
         $model->setOriginal($result);
         return $model;
     }
@@ -606,7 +606,7 @@ class Builder
                     $attributes['id'] = $value['_id'] ?? '';
                 }
                 $model = $this->model->newInstance();
-                $model->setAttributes($attributes);
+                $model->setAttributes($attributes, array_keys($this->fields));
                 $model->setOriginal($value);
                 return $model;
             });
@@ -619,7 +619,7 @@ class Builder
                     $attributes[$vKey] = $list[$vKey]['value'] ?? '';
                 }
                 $model = $this->model->newInstance();
-                $model->setAttributes($attributes);
+                $model->setAttributes($attributes, array_keys($this->fields));
                 $model->setOriginal($data);
 
                 $collection = Collection::make([$model]);
@@ -636,7 +636,7 @@ class Builder
                         }
                     }
                     $model = $this->model->newInstance();
-                    $model->setAttributes($attributes);
+                    $model->setAttributes($attributes, array_keys($this->fields));
                     $model->setOriginal($value);
                     return $model;
                 });
