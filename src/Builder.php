@@ -196,11 +196,10 @@ class Builder
                 $this->isAgg = 1;
             }
         }
-
         return $this;
     }
 
-    public function addSelect(...$params):Builder
+    public function addSelect(...$params): Builder
     {
         return $this->select(...$params);
     }
@@ -369,10 +368,12 @@ class Builder
 
         if (!empty($groupString)) {
             $group = [
-                'script' => [
+                'script'     => [
                     "lang"   => "painless",
                     'source' => $groupString
-                ]
+                ],
+                'size'       => 1000000, //排序分页会根据父聚合的个数进行的，所以这里暂时设置为一百万
+                'shard_size' => 1000000,
             ];
         }
 
@@ -510,7 +511,7 @@ class Builder
      */
     public function paginate(): LengthAwarePaginatorInterface
     {
-        $currentPage = intval(floor($this->offset/$this->limit) + 1);
+        $currentPage = intval(floor($this->offset / $this->limit) + 1);
         $perPage = $this->limit;
 
         $this->sqlCombine();
@@ -640,7 +641,7 @@ class Builder
         ];
 
         $this->sql = $body;
-        $result    = $this->run('indices.getMapping');
+        $result = $this->run('indices.getMapping');
 
         return $result;
     }

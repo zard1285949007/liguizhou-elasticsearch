@@ -15,6 +15,14 @@ use Hyperf\Utils\Collection;
  */
 trait ExcuteBuilder
 {
+    //原始方法
+    public function all($body, $method)
+    {
+        $this->sql = $body;
+        $result = $this->run($method);
+        return $result;
+    }
+
     /**
      * 单条插入，存在更新
      * @param array $value
@@ -94,6 +102,31 @@ trait ExcuteBuilder
         return $result;
     }
 
+
+    public function updateByQuery(array $body, array $query)
+    {
+        $source = '';
+        foreach ($body as $key => $value) {
+            $source .= 'ctx._source.' . $key . '=params.' . $key . ';';
+        }
+        $body = [
+            'index' => $this->model->getIndex(),
+
+            'body'  => [
+                'query'  => $query,
+                'script' => [
+                    'source' => $source,
+                    'params' => $body
+                ]
+            ]
+        ];
+
+        $this->sql = $body;
+        $result = $this->run('updateByQuery');
+
+        return $result;
+    }
+
     public function createIndex(array $values, array $settings = [])
     {
         $properties = [];
@@ -156,6 +189,18 @@ trait ExcuteBuilder
         return $result;
     }
 
+    public function deleteIndex()
+    {
+        $body = [
+            'index' => $this->model->getIndex(),
+        ];
+
+        $this->sql = $body;
+        $result = $this->run('indices.putMapping');
+
+        return $result;
+    }
+
     public function delete($id)
     {
         $body = [
@@ -167,19 +212,39 @@ trait ExcuteBuilder
         return $result;
     }
 
-    public function updateSetting(array $value)
+
+    public function deleteByQuery($value)
     {
         $body = [
             'index' => $this->model->getIndex(),
-            'body' => [
-                'settings' => [
-                    'index' => $value
-                ]
-            ]
+            'query'    => $value
+        ];
+        $this->sql = $body;
+        $result = $this->run('deleteByQuery');
+        return $result;
+    }
+
+    public function updateSetting($value)
+    {
+        $body = [
+            'index' => $this->model->getIndex(),
+            'body' => $value
         ];
 
         $this->sql = $body;
         $result = $this->run('indices.putSettings');
+        return $result;
+    }
+
+    public function updateClusterSetting($value)
+    {
+        $body = [
+            'body' => $value
+
+        ];
+
+        $this->sql = $body;
+        $result = $this->run('cluster.putSettings');
         return $result;
     }
 
