@@ -199,7 +199,7 @@ trait ExcuteBuilder
         ];
 
         $this->sql = $body;
-        $result = $this->run('indices.putMapping');
+        $result = $this->run('indices.delete');
 
         return $result;
     }
@@ -211,7 +211,7 @@ trait ExcuteBuilder
             'id'    => $id
         ];
         $this->sql = $body;
-        $result = $this->run('indices.delete');
+        $result = $this->run('delete');
         return $result;
     }
 
