@@ -8,7 +8,7 @@ class Field
 {
     const AGG_TYPES = ['max', 'min', 'avg', 'sum', 'count'];
 
-    public string $field = '';
+    public $field = '';
 
     public string $aliasField = '';
 
@@ -18,12 +18,19 @@ class Field
 
     public string $fiedString = '';
 
-    public function __construct(string $fieldString)
+    public function __construct($field)
     {
-        $this->fiedString = $fieldString;
-        $this->dealCommon()
-            ->dealAlias()
-            ->dealAgg();
+        if (is_array($field)) { //数组为原生数据查询
+            $this->aggType = 'raw';
+            $this->isAgg = $field['is_agg'] ?? $this->isAgg;
+            $this->aliasField = $field['alias_field'] ?? $this->aliasField;
+            $this->field = $field['field'] ?? [];
+        } else {
+            $this->fiedString = $field;
+            $this->dealCommon()
+                ->dealAlias()
+                ->dealAgg();
+        }
     }
 
     /**

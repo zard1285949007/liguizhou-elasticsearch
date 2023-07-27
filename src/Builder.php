@@ -204,6 +204,24 @@ class Builder
         return $this->select(...$params);
     }
 
+    public function selectRaw(...$params): Builder
+    {
+        $fields = is_array($params) ? $params : func_get_args();
+        foreach ($fields as $field) {
+            $fieldClass = new Field($field);
+            $this->fields[$fieldClass->aliasField] = $fieldClass;
+            if ($fieldClass->isAgg != 0) {
+                $this->isAgg = 1;
+            }
+        }
+        return $this;
+    }
+
+    public function addSelectRaw(...$params): Builder
+    {
+        return $this->selectRaw(...$params);
+    }
+
     private function sqlCombine()
     {
         $this->sql = [
@@ -281,20 +299,23 @@ class Builder
         $fieldArr = [];
         foreach ($this->fields as $vField) {
             if ($vField instanceof Field) {
-                if ($vField->isAgg) {
-                    $fieldArr[$vField->aliasField] = [
-                        $vField->aggType => [
-                            'field' => $vField->field
-                        ]
-                    ];
+                if ($vField->aggType == 'raw') { //原生查询
+                    $fieldArr[$vField->aliasField] = $vField->field;
                 } else {
-                    $fieldArr[$vField->aliasField] = [
-                        'max' => [
-                            'field' => $vField->field
-                        ]
-                    ];
+                    if ($vField->isAgg) {
+                        $fieldArr[$vField->aliasField] = [
+                            $vField->aggType => [
+                                'field' => $vField->field
+                            ]
+                        ];
+                    } else {
+                        $fieldArr[$vField->aliasField] = [
+                            'max' => [
+                                'field' => $vField->field
+                            ]
+                        ];
+                    }
                 }
-
             }
         }
         if (!empty($fieldArr)) {
@@ -476,6 +497,7 @@ class Builder
             ->info('elasticsearch_sql', compact('method', 'sql'));
         try {
             $result = call([$client, $method], [$sql]);
+
             $took = $result['took'] ?? 0;
             if ($this->model->getDebug()) {
                 dump('耗时：' . $took / 1000 . '秒');
