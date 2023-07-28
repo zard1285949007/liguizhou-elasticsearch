@@ -583,6 +583,25 @@ class Builder
         return $collection;
     }
 
+    public function chunk($limit, callable $func)
+    {
+        $this->limit = $limit;
+        $i = 0;
+        while(true) {
+            $this->offset = $limit*$i;
+            $result = $this->get();
+            if (count($result->toArray()) <= 0) {
+                break;
+            }
+            $func($result);
+
+            if ($i >= 1000) { //最多只能1000次分页，防止数据量过大
+                break;
+            }
+            $i++;
+        }
+    }
+
     public function first(): ?Model
     {
         $this->limit(1);
