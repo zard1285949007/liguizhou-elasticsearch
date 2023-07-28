@@ -495,7 +495,7 @@ class Builder
         $trace_id = Context::get('trace_id', '');
         ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
-            ->get('elasticsearch', 'default')
+            ->get('log', 'elasticsearch')
             ->info('elasticsearch_sql:'.$trace_id, compact('method', 'sql'));
         try {
             $result = call([$client, $method], [$sql]);
@@ -507,7 +507,7 @@ class Builder
             if ($took > 3000) { //超过3秒定义为慢查询
                 ApplicationContext::getContainer()
                     ->get(LoggerFactory::class)
-                    ->get('elasticsearch', 'default')
+                    ->get('log', 'elasticsearch')
                     ->info('elasticsearch_slow_sql:' .$trace_id, compact('method', 'sql'));
             }
         } catch (\Exception $e) {
@@ -516,7 +516,7 @@ class Builder
             }
             ApplicationContext::getContainer()
                 ->get(LoggerFactory::class)
-                ->get('elasticsearch', 'default')
+                ->get('log', 'elasticsearch')
                 ->error('elasticsearch_error:'. $trace_id, ['msg' => $e->getMessage(), 'result' => $result]);
             throw new \Exception($e->getMessage());
         }
