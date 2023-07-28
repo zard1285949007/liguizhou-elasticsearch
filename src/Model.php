@@ -27,7 +27,7 @@ abstract class Model implements Arrayable, Jsonable, JsonSerializable
      */
     protected $connection = 'default';
 
-    protected int $debug = 0;
+    protected bool $debug = false;
 
     use HasAttributes;
 
@@ -54,8 +54,19 @@ abstract class Model implements Arrayable, Jsonable, JsonSerializable
      */
     public function newQuery()
     {
-        return $this->newModelBuilder()->setModel($this);
+        return $this->newModelBuilder()->setModel($this->setDebug());
     }
+
+    /**
+     * @return Model
+     */
+    public function setDebug()
+    {
+        $this->debug = env('ES_DEBUG', false);
+        return $this;
+
+    }
+
 
     /**
      * @return \Elasticsearch\Client
