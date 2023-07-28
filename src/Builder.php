@@ -8,6 +8,7 @@ use Hyperf\Contract\LengthAwarePaginatorInterface;
 use Hyperf\Utils\Collection;
 use Hyperf\Logger\LoggerFactory;
 use Hyperf\Utils\ApplicationContext;
+use Hyperf\Utils\Context;
 
 /**
  * Class Builder
@@ -491,10 +492,11 @@ class Builder
             dump($sql);
         }
 
+        $trace_id = Context::get('trace_id', '');
         ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
-            ->get('sql', 'default')
-            ->info('elasticsearch_sql', compact('method', 'sql'));
+            ->get('elasticsearch', 'default')
+            ->info('elasticsearch_sql:'.$trace_id, compact('method', 'sql'));
         try {
             $result = call([$client, $method], [$sql]);
 
@@ -505,8 +507,8 @@ class Builder
             if ($took > 3000) { //超过3秒定义为慢查询
                 ApplicationContext::getContainer()
                     ->get(LoggerFactory::class)
-                    ->get('sql', 'default')
-                    ->info('elasticsearch_slow_sql', compact('method', 'sql'));
+                    ->get('elasticsearch', 'default')
+                    ->info('elasticsearch_slow_sql:' .$trace_id, compact('method', 'sql'));
             }
         } catch (\Exception $e) {
             if ($this->model->getDebug()) {
@@ -515,7 +517,7 @@ class Builder
             ApplicationContext::getContainer()
                 ->get(LoggerFactory::class)
                 ->get('elasticsearch', 'default')
-                ->info('Elasticsearch run', ['msg' => $e->getMessage(), 'result' => $result]);
+                ->info('elasticsearch_error:'. $trace_id, ['msg' => $e->getMessage(), 'result' => $result]);
             throw new \Exception($e->getMessage());
         }
 
@@ -590,11 +592,11 @@ class Builder
         while(true) {
             $this->offset = $limit*$i;
             $result = $this->get();
-            if (count($result->toArray()) <= 0) {
+            if (count($result) <= 0) {
                 break;
             }
-            $func($result);
 
+            $func($result);
             if ($i >= 1000) { //最多只能1000次分页，防止数据量过大
                 break;
             }
