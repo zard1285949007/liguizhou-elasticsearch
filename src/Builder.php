@@ -517,7 +517,7 @@ class Builder
             ApplicationContext::getContainer()
                 ->get(LoggerFactory::class)
                 ->get('log', 'elasticsearch')
-                ->error('elasticsearch_error:'. $trace_id, ['msg' => $e->getMessage(), 'result' => $result]);
+                ->error('elasticsearch_error:'. $trace_id, ['msg' => $e->getMessage()]);
             throw new \Exception($e->getMessage());
         }
 
