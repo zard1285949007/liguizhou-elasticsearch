@@ -38,6 +38,7 @@ trait HasAttributes
         'float'   => 0.00,
         'int'     => 0,
         'integer' => 0,
+        'float2'  => 0.00,
     ];
 
     protected function initData(): void
@@ -87,6 +88,9 @@ trait HasAttributes
                         break;
                     case 'float':
                         $newAttributes[$vField] = floatval($attributes[$vField]);
+                        break;
+                    case 'float2':
+                        $newAttributes[$vField] = round(floatval($attributes[$vField]), 2);
                         break;
                     default:
                         $newAttributes[$vField] = $attributes[$vField];
