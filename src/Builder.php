@@ -234,15 +234,14 @@ class Builder
             $this->sql['body']['query'] = $query;
         }
 
-        if ($this->isAgg == 0) {
-            $this->normalSqlCombine();
-        } else {
-            if ($this->isCount == 0) {
-                $this->aggSqlCombile();
+        if ($this->isCount  == 0) {
+            if ($this->isAgg == 0) {
+                $this->normalSqlCombine();
             } else {
-                $this->countSqlCombile();
+                $this->aggSqlCombile();
             }
-
+        } else {
+            $this->countSqlCombile();
         }
     }
 
@@ -278,9 +277,9 @@ class Builder
             $this->sql['body']['size'] = $this->limit;
             $this->sql['body']['from'] = $this->offset;
         }
-        if ($this->isCount == 1) { //计算条数一定不查询详细数据
-            $this->sql['body']['size'] = 0;
-        }
+//        if ($this->isCount == 1) { //计算条数一定不查询详细数据
+//            $this->sql['body']['size'] = 0;
+//        }
     }
 
     /**
@@ -367,12 +366,15 @@ class Builder
 //            ]
 //        ]
 //    ]
-        $group = $this->parseGroup();
 
-        $this->sql['body']['aggs']['self_count']['cardinality'] = $group;
+        if ($this->isAgg == 0) {
+            $this->sql['body']['size'] = 0;
+        } else {
+            $group = $this->parseGroup();
+            $this->sql['body']['aggs']['self_count']['cardinality'] = $group;
 
-        $this->sql['body']['size'] = 0; //不需要详细数据
-
+            $this->sql['body']['size'] = 0; //不需要详细数据
+        }
     }
 
     /**
@@ -617,19 +619,24 @@ class Builder
     public function count()
     {
         $this->isCount = 1;
-        $this->order = []; //算总数没有排序
-        $this->fields = []; //算总数没有字段
-        $this->sqlCombine();
-        if ($this->isAgg == 0) {
-            $this->sql['body']['track_total_hits'] = true; //文档数量大于10000时，需要加上
+        if ($this->isAgg == 1 && empty($this->parseGroup())) { //聚合查询但是没有分组的条数为1
+            $this->count = 1;
+        } else {
+            $this->order = []; //算总数没有排序
+            $this->fields = []; //算总数没有字段
+            $this->sqlCombine();
+            if ($this->isAgg == 0) {
+                $this->sql['body']['track_total_hits'] = true; //文档数量大于10000时，需要加上
+            }
+
+            $result = $this->run('search');
+            if ($this->isAgg == 0) {
+                $this->count = (int)$result['hits']['total']['value'] ?? 0;
+            } else {
+                $this->count = (int)$result['aggregations']['self_count']['value'] ?? 0;
+            }
         }
 
-        $result = $this->run('search');
-        if ($this->isAgg == 0) {
-            $this->count = (int)$result['hits']['total']['value'] ?? 0;
-        } else {
-            $this->count = (int)$result['aggregations']['self_count']['value'] ?? 0;
-        }
         return $this->count;
     }
 
