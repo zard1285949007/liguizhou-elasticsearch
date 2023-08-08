@@ -173,7 +173,7 @@ class Builder
     public function groupBy($column): Builder
     {
         $column = is_array($column) ? $column : func_get_args();
-        $this->group = array_merge($this->order, $column);
+        $this->group = $column;
         $this->isAgg = 1;
 
         //分组需要将字段添加到查询字段中
@@ -390,7 +390,7 @@ class Builder
         }
         $groupString = trim($groupString, '+');
 
-        if (!empty($groupString)) {
+        if (!empty($this->group)) {
             $group = [
                 'script' => [
                     "lang"   => "painless",
@@ -401,6 +401,13 @@ class Builder
                 $group['size'] = 1000000; //排序分页会根据父聚合的个数进行的，所以这里暂时设置为一百万
                 $group['shard_size'] = 1000000;
             }
+        } else { //没有分组的情况下给一个桶
+            $group = [
+                'script' => [
+                    "lang"   => "painless",
+                    'source' => "1"
+                ],
+            ];
         }
 
         return $group;
@@ -461,7 +468,7 @@ class Builder
         //如果文档中值不存在，然后用这个分组查询，会报错的，所以要加上条件排除不存在的值
         if (!empty($this->group)) {
             foreach ($this->group as $value) {
-                $filterMust[] = ['exists' => ['field' => $value]];
+//                $filterMust[] = ['exists' => ['field' => $value]];
             }
         }
 
@@ -671,36 +678,22 @@ class Builder
                 return $model;
             });
         } else { //聚合
-            if (empty($this->group)) { //没有分组
-                $list = $data['aggregations'] ?? [];
-                $keys = array_keys($list);
+            $list = $data['aggregations']['self_group']['buckets'] ?? [];
+            $collection = Collection::make($list)->map(function ($value) {
+                $keys = array_keys($value);
                 $attributes = [];
                 foreach ($keys as $vKey) {
-                    $attributes[$vKey] = $list[$vKey]['value'] ?? '';
+                    if (in_array($vKey, ['key', 'doc_count'])) {
+                        $attributes[$vKey] = $value[$vKey] ?? '';
+                    } else {
+                        $attributes[$vKey] = $value[$vKey]['value'] ?? '';
+                    }
                 }
                 $model = $this->model->newInstance();
                 $model->setAttributes($attributes, array_keys($this->fields));
-                $model->setOriginal($data);
-
-                $collection = Collection::make([$model]);
-            } else { //没有分组
-                $list = $data['aggregations']['self_group']['buckets'] ?? [];
-                $collection = Collection::make($list)->map(function ($value) {
-                    $keys = array_keys($value);
-                    $attributes = [];
-                    foreach ($keys as $vKey) {
-                        if (in_array($vKey, ['key', 'doc_count'])) {
-                            $attributes[$vKey] = $value[$vKey] ?? '';
-                        } else {
-                            $attributes[$vKey] = $value[$vKey]['value'] ?? '';
-                        }
-                    }
-                    $model = $this->model->newInstance();
-                    $model->setAttributes($attributes, array_keys($this->fields));
-                    $model->setOriginal($value);
-                    return $model;
-                });
-            }
+                $model->setOriginal($value);
+                return $model;
+            });
         }
 
         return $collection;

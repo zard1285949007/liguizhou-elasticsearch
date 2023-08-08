@@ -27,17 +27,65 @@ class Field
             $this->field = $field['field'] ?? [];
         } else {
             $this->fiedString = $field;
-            $this->dealCommon()
-                ->dealAlias()
-                ->dealAgg();
+            if ($this->judgeOperate($this->fiedString)) { //有四则运算
+                $this->dealCommon()
+                    ->dealAlias()
+                    ->dealOperate();
+
+            } else { //简单聚合
+                $this->dealCommon()
+                    ->dealAlias()
+                    ->dealAgg();
+            }
         }
+    }
+
+    private function dealOperate()
+    {
+        $this->aggType = 'raw';
+        $this->isAgg = $field['is_agg'] ?? $this->isAgg; //目前四则运算都算聚合吧，太难了
+
+        //切割四则运算拿字符串
+        $formula = str_replace(' ', '', $this->field);
+        $tokens = preg_split('/([-+*\/()])/', $formula, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        $operators = ['+', '-', '*', '/', '(', ')'];
+        $bucketPath = [];
+        $script = '';
+        foreach ($tokens as $token) {
+            if (in_array($token, $operators)) {
+                $script .= $token;
+            } else {
+                $script .= 'params.' . $token;
+                $bucketPath[$token] = $token . '.value';
+            }
+        }
+
+        //组装sql
+        $this->field = [
+            'bucket_script' => [
+                'buckets_path' => $bucketPath,
+                'script'       => $script
+            ],
+        ];
+    }
+
+    private function judgeOperate(string $string): bool
+    {
+        $operators = ['+', '-', '*', '/'];
+
+        foreach ($operators as $operator) {
+            if (strpos($string, $operator) !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * 对请求字段作公共处理
      * @return $this
      */
-    protected function dealCommon(): Field
+    private function dealCommon(): Field
     {
         $this->fiedString = trim(strtolower($this->fiedString));
         return $this;
@@ -47,7 +95,7 @@ class Field
      * 对字段的别名作处理
      * @return $this
      */
-    public function dealAlias(): Field
+    private function dealAlias(): Field
     {
         $match = explode(' as ', $this->fiedString);
         if (count($match) == 1) {
@@ -64,7 +112,7 @@ class Field
      * 对聚合作处理
      * @return $this
      */
-    public function dealAgg(): Field
+    private function dealAgg(): Field
     {
         if (!empty($this->field)) {
             $pattern = "/\((.*?)\)/";
