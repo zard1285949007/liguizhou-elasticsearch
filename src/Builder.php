@@ -620,7 +620,7 @@ class Builder
         $result = $this->run('search');
         $collection = $this->formatData($result);
 
-        return $collection[0] ?? null;
+        return $collection[0] ?? $this->model->newInstance();
     }
 
     public function count()
