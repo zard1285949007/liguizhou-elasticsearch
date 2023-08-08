@@ -39,6 +39,7 @@ trait HasAttributes
         'int'     => 0,
         'integer' => 0,
         'float2'  => 0.00,
+        'float4'  => 0.00,
     ];
 
     protected function initData(): void
@@ -73,8 +74,9 @@ trait HasAttributes
             //获取数据默认值和数据类型
             $defaultValue = '';
             $type = '';
-            if (isset($this->casts[$vField])) {
-                $type = $this->casts[$vField];
+            $casts = $this->getCasts();
+            if (isset($casts[$vField])) {
+                $type = $casts[$vField];
                 $defaultValue = self::$primitiveCastTypes[$type] ?? '';
             }
             //补全数据和格式化数据
@@ -91,9 +93,11 @@ trait HasAttributes
                         break;
                     case 'float2':
                         $newAttributes[$vField] = round(floatval($attributes[$vField]), 2);
+                    case 'float4':
+                        $newAttributes[$vField] = round(floatval($attributes[$vField]), 4);
                         break;
-                    default:
-                        $newAttributes[$vField] = $attributes[$vField];
+                    default: //浮点数默认保存两位小数
+                        $newAttributes[$vField] = is_float($attributes[$vField]) ? round($attributes[$vField], 2) : $attributes[$vField] ;
                 }
             }
 
@@ -128,13 +132,6 @@ trait HasAttributes
         return $this->casts;
     }
 
-    /**
-     * @param array $casts
-     */
-    public function setCasts(array $casts): void
-    {
-        $this->casts = $casts;
-    }
 
     public function toArray(): array
     {
