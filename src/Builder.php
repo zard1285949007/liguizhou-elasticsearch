@@ -506,6 +506,10 @@ class Builder
             ->get(LoggerFactory::class)
             ->get('log', 'elasticsearch')
             ->info('elasticsearch_sql:'.$trace_id, compact('method', 'sql'));
+        ApplicationContext::getContainer()
+            ->get(LoggerFactory::class)
+            ->get('log', 'elasticsearch')
+            ->info('elasticsearch_param:'.$trace_id, ['order' => $this->order, 'group' => $this->group, 'where' => $this->where, 'fields' => $this->fields, 'offset' => $this->offset, 'limit' => $this->limit, 'isAgg' => $this->isAgg, 'isCount' => $this->isCount]);
         try {
             $result = call([$client, $method], [$sql]);
 
