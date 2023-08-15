@@ -501,15 +501,14 @@ class Builder
             dump($sql);
         }
 
-        $trace_id = Context::get('trace_id', '');
         ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
             ->get('log', 'elasticsearch')
-            ->info('elasticsearch_sql:'.$trace_id, compact('method', 'sql'));
+            ->info('elasticsearch_sql:', compact('method', 'sql'));
         ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
             ->get('log', 'elasticsearch')
-            ->info('elasticsearch_param:'.$trace_id, ['order' => $this->order, 'group' => $this->group, 'where' => $this->where, 'fields' => $this->fields, 'offset' => $this->offset, 'limit' => $this->limit, 'isAgg' => $this->isAgg, 'isCount' => $this->isCount]);
+            ->info('elasticsearch_param:', ['order' => $this->order, 'group' => $this->group, 'where' => $this->where, 'fields' => $this->fields, 'offset' => $this->offset, 'limit' => $this->limit, 'isAgg' => $this->isAgg, 'isCount' => $this->isCount]);
         try {
             $result = call([$client, $method], [$sql]);
 
@@ -521,7 +520,7 @@ class Builder
                 ApplicationContext::getContainer()
                     ->get(LoggerFactory::class)
                     ->get('log', 'elasticsearch')
-                    ->info('elasticsearch_slow_sql:' .$trace_id, compact('method', 'sql'));
+                    ->info('elasticsearch_slow_sql:', compact('method', 'sql'));
             }
         } catch (\Exception $e) {
             if ($this->model->getDebug()) {
@@ -530,7 +529,7 @@ class Builder
             ApplicationContext::getContainer()
                 ->get(LoggerFactory::class)
                 ->get('log', 'elasticsearch')
-                ->error('elasticsearch_error:'. $trace_id, ['msg' => $e->getMessage()]);
+                ->error('elasticsearch_error:', ['msg' => $e->getMessage()]);
             throw new \Exception($e->getMessage());
         }
 
