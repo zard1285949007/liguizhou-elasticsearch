@@ -234,7 +234,7 @@ class Builder
             $this->sql['body']['query'] = $query;
         }
 
-        if ($this->isCount  == 0) {
+        if ($this->isCount == 0) {
             if ($this->isAgg == 0) {
                 $this->normalSqlCombine();
             } else {
@@ -500,11 +500,10 @@ class Builder
         if ($this->model->getDebug()) {
             dump($sql);
         }
-
         ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
             ->get('log', 'elasticsearch')
-            ->info('elasticsearch_sql:', compact('method', 'sql'));
+            ->info('elasticsearch_sql:', ['method' => $method, 'sql' => json_encode($sql)]);
         ApplicationContext::getContainer()
             ->get(LoggerFactory::class)
             ->get('log', 'elasticsearch')
@@ -520,7 +519,7 @@ class Builder
                 ApplicationContext::getContainer()
                     ->get(LoggerFactory::class)
                     ->get('log', 'elasticsearch')
-                    ->info('elasticsearch_slow_sql:', compact('method', 'sql'));
+                    ->info('elasticsearch_slow_sql:', ['method' => $method, 'sql' => json_encode($sql)]);
             }
         } catch (\Exception $e) {
             if ($this->model->getDebug()) {
@@ -601,8 +600,8 @@ class Builder
     {
         $this->limit = $limit;
         $i = 0;
-        while(true) {
-            $this->offset = $limit*$i;
+        while (true) {
+            $this->offset = $limit * $i;
             $result = $this->get();
             if (count($result) <= 0) {
                 break;
