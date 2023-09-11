@@ -111,7 +111,7 @@ trait ExcuteBuilder
         }
         $source = '';
         foreach ($body as $key => $value) {
-            $source .= 'ctx._source.' . $key . '=params.' . $key . ';';
+            $source .= "ctx._source['" . $key . "']=params['" . $key . "'];";
         }
         $body = [
             'index' => $this->model->getIndex(),
