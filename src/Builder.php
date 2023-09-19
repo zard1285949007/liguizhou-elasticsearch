@@ -445,10 +445,10 @@ class Builder
                     $filterMust[] = ['range' => [$column => ['lte' => $value]]];
                     break;
                 case 'in':
-                    $filterMust[] = ['terms' => [$column => $value]];
+                    $filterMust[] = ['terms' => [$column => array_values($value)]];
                     break;
                 case 'not in':
-                    $filterMustNot[] = ['terms' => [$column => $value]];
+                    $filterMustNot[] = ['terms' => [$column => array_values($value)]];
                     break;
                 case 'like':
                     $filterMust[] = ['wildcard' => [$column => sprintf('*%s*', $value)]];
