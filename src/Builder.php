@@ -106,7 +106,7 @@ class Builder
                 $this->where($column, $operator, $value);
             }
         } else {
-            if ($value == null) {
+            if (is_null($value)) {
                 $value = $operator;
                 $operator = '=';
             }
