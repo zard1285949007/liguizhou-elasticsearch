@@ -385,10 +385,14 @@ class Builder
     {
         $group = [];
         $groupString = '';
+        $ifGroupString = '';
         foreach ($this->group as $vGroup) {
+            $ifGroupString .= "doc['{$vGroup}'].size() > 0 &&";
             $groupString .= "doc['{$vGroup}'].value + '_' +";
         }
         $groupString = trim($groupString, '+');
+        $ifGroupString = trim($ifGroupString, '&');
+        $groupString = "if (".$ifGroupString.") { " . $groupString . " } else { '' }" ;
 
         if (!empty($this->group)) {
             $group = [
