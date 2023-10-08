@@ -434,7 +434,7 @@ class Builder
                     break;
                 case '!=':
                 case '<>':
-                    $filterMustNot[] = $filterMust[] = ['term' => [$column => $value]];
+                    $filterMustNot[] = ['term' => [$column => $value]];
                     break;
                 case '>':
                     $filterMust[] = ['range' => [$column => ['gt' => $value]]];
